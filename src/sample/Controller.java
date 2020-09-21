@@ -2,13 +2,15 @@ package sample;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.Event;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.TouchEvent;
 import javafx.scene.layout.VBox;
 
 public class Controller {
@@ -20,6 +22,9 @@ public class Controller {
     private URL location;
 
     @FXML
+    private SplitPane splitPane;
+
+    @FXML
     private Button menuBtn;
 
     @FXML
@@ -29,7 +34,7 @@ public class Controller {
     private VBox chatsVbox;
 
     @FXML
-    private ScrollPane chatContent;
+    private ScrollPane chatScrollPane;
 
     @FXML
     void initialize() {
@@ -39,11 +44,16 @@ public class Controller {
         Image image = new Image(url, true);
         ImageView imageView = new ImageView(image);
         Label msg = new Label("Чтобы стать прогером надо всего лишь...");
-        ChatViewItem chatViewItem;
+        ChatViewItem[] chatViewItem = new ChatViewItem[30];
         //chatsVbox.setStyle("-fx-background-color: red");
         for (int i = 0; i < 15; i++) {
-            chatViewItem = new ChatViewItem("Чат ".concat(String.valueOf(i)), chatsVbox.getWidth());
-            chatsVbox.getChildren().add(chatViewItem);
+            chatViewItem[i] = new ChatViewItem("Чат ".concat(String.valueOf(i)), chatsVbox.getWidth());
+            chatsVbox.getChildren().add(chatViewItem[i]);
         }
+        splitPane.getDividers().get(0).positionProperty().addListener((observableValue, number, t1) -> {
+            for (int i = 0; i < 15; i++) {
+                chatViewItem[i].setPrefWidth(splitPane.getScene().getWidth()*splitPane.getDividerPositions()[0]-10);
+            }
+        });
     }
 }

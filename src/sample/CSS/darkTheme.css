@@ -4,6 +4,11 @@
     -fx-background-color: rgb(14, 22, 33);
 }
 
+.split-pane:horizontal > .split-pane-divider {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0.0em 0 0.0em;
+}
+
 .scroll-pane > .corner {
     -fx-background-color: transparent;
 }
@@ -32,4 +37,12 @@
 .scroll-bar:vertical .decrement-arrow{
     -fx-shape : " ";
     -fx-padding :0.0 0.15em;
+}
+
+.list-view{
+    -fx-background-color: transparent;
+}
+
+.list-view > .list-cell{
+    -fx-background-color: transparent;
 }

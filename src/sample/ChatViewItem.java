@@ -48,7 +48,7 @@ public class ChatViewItem extends AnchorPane {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
-        //this.setPrefWidth(width);
+        //this.setPrefWidth(700);
         this.name.setText(name);
         this.setOnMouseClicked(mouseEvent -> this.setStyle("-fx-background-color: dodgerblue"));
         this.setOnMouseEntered(mouseEvent ->  this.setStyle("-fx-background-color: slategray"));
