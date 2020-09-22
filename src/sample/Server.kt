@@ -1,4 +1,4 @@
-package sample;
+package sample.API
 
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
@@ -10,92 +10,21 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.sql.Connection
+import java.sql.Driver
 import java.sql.DriverManager
+import java.sql.ResultSet
 import java.util.*
 import java.util.regex.Pattern
+import javax.xml.crypto.Data
 import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 import kotlin.math.floor
 
 data class MutablePair<T, E>(var first: T, var second: E)
 
-class WebSocketServerConnection(val socket: Socket): EventEmitter<String>() {
-    private var thread: Thread? = null
-
-    fun close() {
-        thread?.stop()
-        socket.close()
-    }
-    init {
-        val scanner = Scanner(socket.getInputStream(), "UTF-8")
-        val data = scanner.useDelimiter("\r\n\r\n").next()
-        val getRequest = Pattern.compile("^GET").matcher(data)
-        if (getRequest.find()) {
-            val match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(data)
-            match.find()
-            val responseString = "HTTP/1.1 101 Switching Protocols\r\n" +
-                    "Connection: Upgrade\r\n" +
-                    "Upgrade: websocket\r\n" +
-                    "Sec-WebSocket-Accept: ${ Base64.getEncoder().encodeToString(
-                            MessageDigest.getInstance("SHA-1").digest(
-                                    (match.group(1) + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").toByteArray(StandardCharsets.UTF_8)
-                            )
-                    ) }\r\n\r\n"
-            val response = responseString.toByteArray(StandardCharsets.UTF_8)
-            socket.getOutputStream().write(response, 0, response.size)
-
-            thread = thread(true) {
-                while (true) {
-                    try {
-                        val opcode = socket.readBlocking(1)[0]
-                        if (opcode == 129) {
-                            val lengthByte = socket.readBlocking(1)[0] - 128
-                            val length = when (lengthByte) {
-                                in 0..125 -> lengthByte
-                                126 -> {
-                                    val bytes = socket.readBlocking(2)
-                                    (bytes[0] shl 8) + bytes[1]
-                                }
-                                else -> throw RuntimeException()
-                            }
-                            val key = socket.readBlocking(4)
-                            val encoded = socket.readBlocking(length)
-                            val decoded = encoded.mapIndexed { i, it -> (it xor key[i and 3]).toByte() }.toByteArray()
-                            val string = String(decoded, StandardCharsets.UTF_8)
-                            emit(string)
-                        } else {
-                            throw RuntimeException("Unknown opcode $opcode")
-                        }
-                    } catch (e: Exception) {
-                        println(e)
-                    }
-                }
-            }
-        }
-    }
-}
-
 abstract class AppServerConnection: EventEmitter<JSONObject>() {
     abstract fun send(data: JSONObject)
     abstract fun close()
-}
-
-class AppWebServerConnection(val socket: WebSocketServerConnection): AppServerConnection() {
-    init {
-        socket.addListener {
-            val parsed = JSONParser().parse(it) as JSONObject
-            emit(parsed)
-        }
-    }
-
-    override fun send(data: JSONObject) {
-        val byteArray = data.toJSONString().toByteArray()
-        socket.socket.getOutputStream().write(byteArray)
-    }
-
-    override fun close() {
-        socket.close()
-    }
 }
 
 class AppSocketServerConnection(val socket: Socket): AppServerConnection() {
@@ -246,6 +175,16 @@ class DatabaseConnection {
         statement.setString(1, token)
         statement.execute()
     }
+    private fun messageResultToMessageList(queryResult: ResultSet): List<Message> {
+        val result = ArrayList<Message>()
+        while (queryResult.next()) {
+            result.add(Message(
+                    queryResult.getInt("from_id"), queryResult.getInt("to_id"),
+                    queryResult.getString("value"), queryResult.getInt("sent")
+            ))
+        }
+        return result
+    }
     fun getLastMessages(fromId: Int, toId: Int, count: Int, offset: Int): List<Message> {
         val statement = connection
                 .prepareStatement("SELECT * FROM messages WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY sent DESC LIMIT ? OFFSET ?")
@@ -256,29 +195,25 @@ class DatabaseConnection {
         statement.setInt(5, count)
         statement.setInt(6, offset)
         val queryResult = statement.executeQuery()
-        val result = ArrayList<Message>()
-        while (queryResult.next()) {
-            result.add(Message(
-                    queryResult.getInt("from_id"), queryResult.getInt("to_id"),
-                    queryResult.getString("value"), queryResult.getInt("sent")
-            ))
-        }
-        return result
+        return messageResultToMessageList(queryResult)
+    }
+    fun getLastMessages(fromId: Int, count: Int, offset: Int): List<Message> {
+        val statement = connection
+                .prepareStatement("SELECT * FROM messages WHERE from_id = ? OR to_id = ? ORDER BY sent DESC LIMIT ? OFFSET ?")
+        statement.setInt(1, fromId)
+        statement.setInt(2, fromId)
+        statement.setInt(3, count)
+        statement.setInt(4, offset)
+        val queryResult = statement.executeQuery()
+        return messageResultToMessageList(queryResult)
     }
 }
 
-class AppServer(val socketPort: Int, val webSocketPort: Int): EventEmitter<AppServerConnection>() {
-    val webSocketServer = ServerSocket(webSocketPort)
+class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
     val socketServer = ServerSocket(socketPort)
     val databaseConnection = DatabaseConnection()
 
     init {
-        thread(true) {
-            while (true) {
-                val socket = AppWebServerConnection(WebSocketServerConnection(webSocketServer.accept()))
-                emit(socket)
-            }
-        }
         thread(true) {
             while (true) {
                 val socket = AppSocketServerConnection(socketServer.accept())
@@ -407,7 +342,7 @@ class AppServer(val socketPort: Int, val webSocketPort: Int): EventEmitter<AppSe
                 databaseConnection.deleteToken(getToken() ?: return error("wtf"))
                 successResponse()
             }
-            "getLastMessages" -> {
+            "getLastMessagesFrom" -> {
                 val user = getUserFromToken() ?: return error("Bad token")
                 val username = (query["username"] as? String) ?: return error("Username not specified")
                 val offset = ((query["offset"] as? Long) ?: 0L).toInt()
@@ -420,6 +355,25 @@ class AppServer(val socketPort: Int, val webSocketPort: Int): EventEmitter<AppSe
                     messageObject["timestamp"] = it.timestamp
                     messageObject["from"] = if (it.fromId == user.id) user.username else receiver.username
                     messageObject["to"] = if (it.toId == user.id) user.username else receiver.username
+                    messagesResponse.add(messageObject)
+                }
+                val response = successResponse()
+                response["messages"] = messagesResponse
+                response
+            }
+            "getLastMessages" -> {
+                val user = getUserFromToken() ?: return error("Bad token")
+                val offset = ((query["offset"] as? Long) ?: 0L).toInt()
+                val messages = databaseConnection.getLastMessages(user.id, 100, offset)
+                val messagesResponse = JSONArray()
+                messages.forEach {
+                    val messageObject = JSONObject()
+                    messageObject["value"] = it.value
+                    messageObject["timestamp"] = it.timestamp
+                    val other = databaseConnection.getUser(if (it.fromId == user.id) it.toId else it.fromId)
+                            ?: return error("wtf")
+                    messageObject["from"] = if (it.fromId == user.id) user.username else other.username
+                    messageObject["to"] = if (it.toId == user.id) user.username else other.username
                     messagesResponse.add(messageObject)
                 }
                 val response = successResponse()

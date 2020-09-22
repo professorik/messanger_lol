@@ -24,28 +24,28 @@ public class Test {
 
         Scanner scanner = new Scanner(System.in);
 
-        /*new Thread(() -> {
+        new Thread(() -> {
             try {
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             AppSocket newSocket = new AppSocket();
             JSONObject register = new JSONObject();
             register.put("type", "register");
-            register.put("username", "karkar");
+            register.put("username", "karkar1");
             register.put("password", "karkar");
             newSocket.request(register).addListener(__ -> {
                 JSONObject login = new JSONObject();
                 login.put("type", "login");
-                login.put("username", "karkar");
+                login.put("username", "karkar1");
                 login.put("password", "karkar");
                 newSocket.request(login).addListener(response -> {
                     String token = (String) response.get("token");
                     JSONObject message = new JSONObject();
                     message.put("type", "sendMessage");
                     message.put("token", token);
-                    message.put("value", "ty mudak");
+                    message.put("value", "ty mudak1");
                     message.put("username", "nikita202");
                     newSocket.request(message).addListener(messageResponse -> {
                         System.out.println(messageResponse);
@@ -55,7 +55,7 @@ public class Test {
                 });
                 return Unit.INSTANCE;
             });
-        }).start();*/
+        }).start();
 
         while (true) {
             String input = scanner.nextLine();
@@ -75,5 +75,5 @@ public class Test {
 
 //{"type":"register","username":"nikita202","password":"karkar"}
 //{"type":"login","username":"nikita202","password":"karkar"}
-//{"type":"setCurrentToken","token":"jczhHHoajAVQ7JWwNoxP"}
-//{"type":"getLastMessages","username":"karkar"}
+//{"type":"setCurrentToken","token":"XeZTRncIlsvKFd67lUFu"}
+//{"type":"getLastMessagesFrom","username":"karkar"}
