@@ -3,11 +3,13 @@ package sample.API
 import java.lang.Exception
 import java.lang.RuntimeException
 import java.net.Socket
+import java.util.concurrent.CountDownLatch
 
 fun Socket.readBlocking(length: Int): IntArray {
     val result = IntArray(length)
     var i = 0
     while (i < length) {
+        if (isClosed) throw RuntimeException("The socket is closed")
         result[i] = getInputStream().read()
         if (result[i] == -1) throw RuntimeException("No more data available")
         i++
@@ -34,5 +36,12 @@ open class EventEmitter<T> {
                 e.printStackTrace()
             }
         }
+    }
+    fun await(): T {
+        val latch = CountDownLatch(1)
+        var result: T? = null
+        addListener { result = it; latch.countDown() }
+        latch.await()
+        return result!!
     }
 }
