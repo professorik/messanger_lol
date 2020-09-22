@@ -39,7 +39,7 @@ public class ChatViewItem extends AnchorPane {
         });
     }
 
-    public ChatViewItem(String name, double width) {
+    public ChatViewItem(String name, String message, String timestamp, double width) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("FXMLs/chatItem.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -48,8 +48,10 @@ public class ChatViewItem extends AnchorPane {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
-        this.setPrefWidth(700);
+        this.setPrefWidth(width);
         this.name.setText(name);
+        this.lastMsg.setText(message);
+        this.time.setText(timestamp);
         this.setOnMouseClicked(mouseEvent -> this.setStyle("-fx-background-color: dodgerblue"));
         this.setOnMouseEntered(mouseEvent ->  this.setStyle("-fx-background-color: slategray"));
         this.setOnMouseExited(mouseEvent -> this.setStyle("-fx-background-color: #233144"));

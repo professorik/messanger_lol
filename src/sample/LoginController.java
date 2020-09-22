@@ -46,9 +46,9 @@ public class LoginController extends MainController {
             jsonObject.put("type", "login");
             jsonObject.put("username", loginText.getText());
             jsonObject.put("password", passwordText.getText());
-            JSONObject object = (JSONObject) new JSONParser().parse(jsonObject.toString());
-            socket.request(object).addListener(response -> {
+            socket.request(jsonObject).addListener(response -> {
                 if ((Boolean) response.get("success")) {
+                    Main.mainToken = response.get("token").toString();
                     changeScene(signInBtn, "sample", 1050, 720);
                 } else {
                     showAlert(Alert.AlertType.ERROR, signInBtn.getScene().getWindow(), "Sign In Error", response.get("error").toString());
