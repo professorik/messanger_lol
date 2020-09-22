@@ -10,12 +10,9 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.sql.Connection
-import java.sql.Driver
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.util.*
-import java.util.regex.Pattern
-import javax.xml.crypto.Data
 import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 import kotlin.math.floor
