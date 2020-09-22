@@ -1,3 +1,5 @@
+package sample.API
+
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser
 import java.lang.Math.random
