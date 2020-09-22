@@ -207,6 +207,17 @@ class DatabaseConnection {
         val queryResult = statement.executeQuery()
         return messageResultToMessageList(queryResult)
     }
+    fun getChats(with: Int): List<String> {
+        val statement = connection
+                .prepareStatement("SELECT DISTINCT username FROM users LEFT JOIN messages ON ((messages.from_id = users.id AND messages.to_id = ?) OR (messages.to_id = users.id AND messages.from_id = ?)) WHERE messages.id IS NOT NULL AND users.id != ?")
+        statement.setInt(1, with)
+        statement.setInt(2, with)
+        statement.setInt(3, with)
+        val resultSet = statement.executeQuery()
+        val result = ArrayList<String>()
+        while (resultSet.next()) result.add(resultSet.getString("username"))
+        return result
+    }
 }
 
 class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
@@ -378,6 +389,14 @@ class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
                 }
                 val response = successResponse()
                 response["messages"] = messagesResponse
+                response
+            }
+            "getChats" -> {
+                val user = getUserFromToken() ?: return error("Bad token")
+                val chats = JSONArray()
+                databaseConnection.getChats(user.id).forEach { chats.add(it) }
+                val response = successResponse()
+                response["chats"] = chats
                 response
             }
             else -> error("Unknown query type")

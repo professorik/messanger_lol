@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class Test {
     public static void main(String[] args) throws IOException {
-        AppServer server = new AppServer(8080, 8081);
+        AppServer server = new AppServer(8080);
 
         AppSocket socket = new AppSocket();
 
