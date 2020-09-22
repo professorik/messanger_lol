@@ -9,6 +9,7 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.sql.Blob
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
@@ -53,7 +54,7 @@ class AppSocketServerConnection(val socket: Socket): AppServerConnection() {
 }
 
 data class Message(val fromId: Int, val toId: Int, val value: String, val timestamp: Int)
-data class User(val id: Int, val username: String, val name: String?, val password: String)
+data class User(val id: Int, val username: String, val name: String?, val password: String, val profilePic: ByteArray?)
 data class Token(val id: Int, val userId: Int, val value: String)
 
 class DatabaseConnection {
@@ -65,7 +66,8 @@ class DatabaseConnection {
                         "id integer PRIMARY KEY,\n" +
                         "username string NOT NULL,\n" +
                         "name string,\n" +
-                        "password string\n" +
+                        "password string,\n" +
+                        "profile_pic blob\n" +
                         ");"
         )
         connection.createStatement().execute(
@@ -103,7 +105,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"))
+                    result.getString("password"), result.getBlob("profile_pic")?.binaryStream?.readAllBytes())
         else null
     }
     private fun encodePassword(password: String) = MessageDigest.getInstance("SHA1").digest(password.toByteArray())
@@ -117,7 +119,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"))
+                    result.getString("password"), result.getBlob("profile_pic")?.binaryStream?.readAllBytes())
         else null
     }
     fun getUser(id: Int): User? {
@@ -127,7 +129,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"))
+                    result.getString("password"), result.getBlob("profile_pic")?.binaryStream?.readAllBytes())
         else null
     }
     fun createToken(userId: Int): String {
@@ -203,6 +205,15 @@ class DatabaseConnection {
         statement.setInt(4, offset)
         val queryResult = statement.executeQuery()
         return messageResultToMessageList(queryResult)
+    }
+    fun setProfilePic(id: Int, pic: ByteArray?) {
+        val statement = connection
+                .prepareStatement("UPDATE users SET profile_pic = ? WHERE id = ?")
+        val blob = connection.createBlob()
+        if (pic != null) blob.setBytes(1, pic)
+        statement.setBlob(1, if (pic != null) blob else null)
+        statement.setInt(2, id)
+        statement.execute()
     }
     fun getChats(with: Int): List<String> {
         val statement = connection
@@ -305,7 +316,19 @@ class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
                 val response = successResponse()
                 response["username"] = user.username
                 response["name"] = user.name
+                response["profilePicture"] = String(Base64.getEncoder().encode(user.profilePic))
                 response
+            }
+            "setProfilePicture" -> {
+                val user = getUserFromToken() ?: return error("Bad token")
+                val pic = Base64.getDecoder().decode((query["base64"] as? String) ?: return error("Username not specified"))
+                databaseConnection.setProfilePic(user.id, pic)
+                successResponse()
+            }
+            "deleteProfilePicture" -> {
+                val user = getUserFromToken() ?: return error("Bad token")
+                databaseConnection.setProfilePic(user.id, null)
+                successResponse()
             }
             "sendMessage" -> {
                 val user = getUserFromToken() ?: return error("Bad token")
