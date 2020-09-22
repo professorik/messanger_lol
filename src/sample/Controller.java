@@ -1,17 +1,22 @@
 package sample;
 
 import java.net.URL;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.ResourceBundle;
+import java.util.TimeZone;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.TouchEvent;
 import javafx.scene.layout.VBox;
+import kotlin.Unit;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import sample.API.AppSocket;
 
 public class Controller {
 
@@ -36,23 +41,63 @@ public class Controller {
     @FXML
     private ScrollPane chatScrollPane;
 
+    private ArrayList<ChatViewItem> chatViewItems;
+
     @FXML
     void initialize() {
-        Label name = new Label("Сообщесвто");
-        Label time = new Label("13:23");
-        String url = "sample/icons/menuIcon.png";
-        Image image = new Image(url, true);
-        ImageView imageView = new ImageView(image);
-        Label msg = new Label("Чтобы стать прогером надо всего лишь...");
-        ChatViewItem[] chatViewItem = new ChatViewItem[30];
+        chatViewItems = new ArrayList<>();
         //chatsVbox.setStyle("-fx-background-color: red");
-        for (int i = 0; i < 15; i++) {
-            chatViewItem[i] = new ChatViewItem("Чат ".concat(String.valueOf(i)), chatsVbox.getWidth());
-            chatsVbox.getChildren().add(chatViewItem[i]);
+        initChatsList(Main.mainToken);
+        controlChatsList();
+    }
+
+    private void initChatsList(String token) {
+        AppSocket socket = new AppSocket();
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "getChats");
+            jsonObject.put("token", token);
+            socket.request(jsonObject).addListener(response -> {
+                System.out.println("Request: " + jsonObject);
+                System.out.println("Response: " + response);
+                if ((Boolean) response.get("success")) {
+                    ArrayList<String> chats = (ArrayList<String>) response.get("chats");
+                    JSONObject lastMsgResp;
+                    for (String chatName : chats) {
+                        lastMsgResp = new JSONObject();
+                        lastMsgResp.put("type", "getLastMessagesFrom");
+                        lastMsgResp.put("username", chatName);
+                        lastMsgResp.put("token", Main.mainToken);
+                        lastMsgResp.put("offset", 0);
+                        socket.request(lastMsgResp).addListener(responseMsg -> {
+                            addItemToChatsList(chatName, ((ArrayList<JSONObject>) responseMsg.get("messages")).get(0));
+                            return Unit.INSTANCE;
+                        });
+                    }
+                }
+                return Unit.INSTANCE;
+            });
+        } catch (Exception e) {
+            System.err.println(e);
         }
+    }
+
+    private void addItemToChatsList(String chatName, JSONObject lastMessage) {
+        Platform.runLater(() -> {
+            Timestamp timestamp = new Timestamp(Long.valueOf(lastMessage.get("timestamp").toString()));
+            Date date = new Date(timestamp.getTime()*1000);
+            SimpleDateFormat sdf = new SimpleDateFormat("kk:mm");
+            sdf.setTimeZone(Calendar.getInstance().getTimeZone());
+            String formattedDate = sdf.format(date);
+            chatViewItems.add(new ChatViewItem(chatName, lastMessage.get("value").toString(), formattedDate, 1050 * splitPane.getDividerPositions()[0] - 10));
+            chatsVbox.getChildren().add(chatViewItems.get(chatViewItems.size() - 1));
+        });
+    }
+
+    private void controlChatsList() {
         splitPane.getDividers().get(0).positionProperty().addListener((observableValue, number, t1) -> {
-            for (int i = 0; i < 15; i++) {
-                chatViewItem[i].setPrefWidth(splitPane.getScene().getWidth()*splitPane.getDividerPositions()[0]-10);
+            for (int i = 0; i < chatViewItems.size(); i++) {
+                chatViewItems.get(i).setPrefWidth(splitPane.getScene().getWidth() * splitPane.getDividerPositions()[0] - 10);
             }
         });
     }

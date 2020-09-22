@@ -49,8 +49,7 @@ public class RegisterController extends MainController{
                 jsonObject.put("type", "register");
                 jsonObject.put("username", loginText.getText());
                 jsonObject.put("password", passwordText.getText());
-                JSONObject object = (JSONObject) new JSONParser().parse(jsonObject.toString());
-                socket.request(object).addListener(response -> {
+                socket.request(jsonObject).addListener(response -> {
                     if ((Boolean) response.get("success")) {
                         changeScene(signUpBtn, "signInForm", 400, 650);
                     } else {

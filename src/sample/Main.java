@@ -9,10 +9,12 @@ import sample.API.AppServer;
 
 public class Main extends Application {
 
+    public static String mainToken = "";
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("FXMLs/signInForm.fxml"));
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Karkargram");
         Scene scene = new Scene(root, 400, 650);
         primaryStage.setScene(scene);
         primaryStage.show();
