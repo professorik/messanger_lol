@@ -18,6 +18,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
+        AppServer server = new AppServer(8080, 8081);
         launch(args);
     }
 }

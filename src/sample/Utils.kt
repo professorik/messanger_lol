@@ -1,4 +1,4 @@
-package sample.API;
+package sample;
 
 import java.lang.Exception
 import java.lang.RuntimeException
