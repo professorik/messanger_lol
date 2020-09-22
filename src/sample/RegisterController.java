@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import kotlin.Unit;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import sample.API.AppSocket;
 
 public class RegisterController extends MainController{
 
