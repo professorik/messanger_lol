@@ -1,5 +1,6 @@
 package sample;
 
+import java.net.Socket;
 import java.net.URL;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -12,6 +13,7 @@ import java.util.TimeZone;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import kotlin.Unit;
 import org.json.simple.JSONArray;
@@ -70,7 +72,7 @@ public class Controller {
                         lastMsgResp.put("token", Main.mainToken);
                         lastMsgResp.put("offset", 0);
                         socket.request(lastMsgResp).addListener(responseMsg -> {
-                            addItemToChatsList(chatName, ((ArrayList<JSONObject>) responseMsg.get("messages")).get(0));
+                            addItemToChatsList(chatName, ((ArrayList<JSONObject>) responseMsg.get("messages")).get(0), socket);
                             return Unit.INSTANCE;
                         });
                     }
@@ -82,15 +84,23 @@ public class Controller {
         }
     }
 
-    private void addItemToChatsList(String chatName, JSONObject lastMessage) {
-        Platform.runLater(() -> {
-            Timestamp timestamp = new Timestamp(Long.valueOf(lastMessage.get("timestamp").toString()));
-            Date date = new Date(timestamp.getTime()*1000);
-            SimpleDateFormat sdf = new SimpleDateFormat("kk:mm");
-            sdf.setTimeZone(Calendar.getInstance().getTimeZone());
-            String formattedDate = sdf.format(date);
-            chatViewItems.add(new ChatViewItem(chatName, lastMessage.get("value").toString(), formattedDate, 1050 * splitPane.getDividerPositions()[0] - 10));
-            chatsVbox.getChildren().add(chatViewItems.get(chatViewItems.size() - 1));
+    private void addItemToChatsList(String chatName, JSONObject lastMessage, AppSocket socket) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "findUser");
+        jsonObject.put("token", Main.mainToken);
+        jsonObject.put("username", chatName);
+        socket.request(jsonObject).addListener(response -> {
+            System.out.println(response);
+            Platform.runLater(() -> {
+                Timestamp timestamp = new Timestamp(Long.valueOf(lastMessage.get("timestamp").toString()));
+                Date date = new Date(timestamp.getTime()*1000);
+                SimpleDateFormat sdf = new SimpleDateFormat("kk:mm");
+                sdf.setTimeZone(Calendar.getInstance().getTimeZone());
+                String formattedDate = sdf.format(date);
+                chatViewItems.add(new ChatViewItem(chatName, lastMessage.get("value").toString(), formattedDate, response.get("profilePicture"), 1050 * splitPane.getDividerPositions()[0] - 10));
+                chatsVbox.getChildren().add(chatViewItems.get(chatViewItems.size() - 1));
+            });
+            return Unit.INSTANCE;
         });
     }
 

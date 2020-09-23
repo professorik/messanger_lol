@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Skin;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
@@ -39,7 +40,7 @@ public class ChatViewItem extends AnchorPane {
         });
     }
 
-    public ChatViewItem(String name, String message, String timestamp, double width) {
+    public ChatViewItem(String name, String message, String timestamp, Object avatar, double width) {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("FXMLs/chatItem.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
@@ -52,6 +53,9 @@ public class ChatViewItem extends AnchorPane {
         this.name.setText(name);
         this.lastMsg.setText(message);
         this.time.setText(timestamp);
+        if (avatar != null){
+            this.avatar.setImage(ImageProcessor.decodeBase64ToFile(avatar.toString()));
+        }
         this.setOnMouseClicked(mouseEvent -> this.setStyle("-fx-background-color: dodgerblue"));
         this.setOnMouseEntered(mouseEvent ->  this.setStyle("-fx-background-color: slategray"));
         this.setOnMouseExited(mouseEvent -> this.setStyle("-fx-background-color: #233144"));

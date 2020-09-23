@@ -34,7 +34,7 @@
                         <Cursor fx:constant="DEFAULT" />
                      </cursor>
                      <content>
-                        <VBox fx:id="chatsVbox" focusTraversable="true" prefHeight="414.0" prefWidth="174.0" />
+                        <VBox fx:id="chatsVbox" focusTraversable="true" prefHeight="414.0" prefWidth="174.0" spacing="10.0" />
                      </content>
                   </ScrollPane>
                </children>
