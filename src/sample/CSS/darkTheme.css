@@ -4,6 +4,13 @@
     -fx-background-color: rgb(14, 22, 33);
 }
 
+.text-area{
+    -fx-control-inner-background:rgb(35, 49, 68);
+    -fx-highlight-text-fill: rgb(35, 49, 68);
+    -fx-border-color: rgb(35, 49, 68);
+    -fx-background-color: rgb(35, 49, 68);
+}
+
 .split-pane:horizontal > .split-pane-divider {
     -fx-background-color: transparent;
     -fx-padding: 0 0.0em 0 0.0em;

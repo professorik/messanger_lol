@@ -1,6 +1,5 @@
 package sample;
 
-import java.net.Socket;
 import java.net.URL;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -8,15 +7,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.ResourceBundle;
-import java.util.TimeZone;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import kotlin.Unit;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import sample.API.AppSocket;
 
@@ -41,16 +37,47 @@ public class Controller {
     private VBox chatsVbox;
 
     @FXML
+    private VBox messagesVbox;
+
+    @FXML
     private ScrollPane chatScrollPane;
 
     private ArrayList<ChatViewItem> chatViewItems;
+    private ArrayList<MessageController> messageItems;
 
     @FXML
     void initialize() {
         chatViewItems = new ArrayList<>();
+        messageItems = new ArrayList<>();
         //chatsVbox.setStyle("-fx-background-color: red");
         initChatsList(Main.mainToken);
-        controlChatsList();
+        controlDivider();
+    }
+
+    private void initMessages(String name) {
+        messagesVbox.getChildren().clear();
+        messageItems = new ArrayList<>();
+        AppSocket socket = new AppSocket();
+        try {
+            JSONObject lastMsgResp = new JSONObject();
+            lastMsgResp.put("type", "getLastMessagesFrom");
+            lastMsgResp.put("username", name);
+            lastMsgResp.put("token", Main.mainToken);
+            lastMsgResp.put("offset", 0);
+            socket.request(lastMsgResp).addListener(responseMsg -> {
+                for (JSONObject object: (ArrayList<JSONObject>) responseMsg.get("messages")){
+                    Platform.runLater(()->{
+                        System.out.println(object);
+                        String formattedDate = convertTimestamp(object.get("timestamp").toString());
+                        messageItems.add(new MessageController(object.get("value").toString(), formattedDate));
+                        messagesVbox.getChildren().add(messageItems.get(messageItems.size()-1));
+                    });
+                }
+                return Unit.INSTANCE;
+            });
+        } catch (Exception e) {
+            System.err.println(e);
+        }
     }
 
     private void initChatsList(String token) {
@@ -92,23 +119,35 @@ public class Controller {
         socket.request(jsonObject).addListener(response -> {
             System.out.println(response);
             Platform.runLater(() -> {
-                Timestamp timestamp = new Timestamp(Long.valueOf(lastMessage.get("timestamp").toString()));
-                Date date = new Date(timestamp.getTime()*1000);
-                SimpleDateFormat sdf = new SimpleDateFormat("kk:mm");
-                sdf.setTimeZone(Calendar.getInstance().getTimeZone());
-                String formattedDate = sdf.format(date);
+                String formattedDate = convertTimestamp(lastMessage.get("timestamp").toString());
                 chatViewItems.add(new ChatViewItem(chatName, lastMessage.get("value").toString(), formattedDate, response.get("profilePicture"), 1050 * splitPane.getDividerPositions()[0] - 10));
+                chatViewItems.get(chatViewItems.size()-1).setOnMouseClicked(mouseEvent -> {
+                    initMessages(chatName);
+                });
                 chatsVbox.getChildren().add(chatViewItems.get(chatViewItems.size() - 1));
             });
             return Unit.INSTANCE;
         });
     }
 
-    private void controlChatsList() {
+    private void controlDivider() {
         splitPane.getDividers().get(0).positionProperty().addListener((observableValue, number, t1) -> {
             for (int i = 0; i < chatViewItems.size(); i++) {
                 chatViewItems.get(i).setPrefWidth(splitPane.getScene().getWidth() * splitPane.getDividerPositions()[0] - 10);
             }
+            for (int i = 0; i < messageItems.size(); i++) {
+                System.out.println(messageItems.get(0).getPrefWidth());
+                messageItems.get(i).setPrefSizeRoot(splitPane.getScene().getWidth() * (1 - splitPane.getDividerPositions()[0]) * 0.7);
+                System.out.println(messageItems.get(0).getPrefWidth());
+            }
         });
+    }
+
+    private String convertTimestamp(String timestampStr){
+        Timestamp timestamp = new Timestamp(Long.valueOf(timestampStr));
+        Date date = new Date(timestamp.getTime()*1000);
+        SimpleDateFormat sdf = new SimpleDateFormat("kk:mm");
+        sdf.setTimeZone(Calendar.getInstance().getTimeZone());
+        return sdf.format(date);
     }
 }
