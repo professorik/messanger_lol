@@ -17,6 +17,8 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 import kotlin.math.floor
 
+fun String.base64Decode(): ByteArray = Base64.getDecoder().decode(this)
+
 data class MutablePair<T, E>(var first: T, var second: E)
 
 abstract class AppServerConnection: EventEmitter<JSONObject>() {
@@ -104,7 +106,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"), Base64.getDecoder().decode(result.getString("profile_pic")))
+                    result.getString("password"), result.getString("profile_pic")?.base64Decode())
         else null
     }
     private fun encodePassword(password: String) = MessageDigest.getInstance("SHA1").digest(password.toByteArray())
@@ -118,7 +120,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"), Base64.getDecoder().decode(result.getString("profile_pic")))
+                    result.getString("password"), result.getString("profile_pic")?.base64Decode())
         else null
     }
     fun getUser(id: Int): User? {
@@ -128,7 +130,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"), Base64.getDecoder().decode(result.getString("profile_pic")))
+                    result.getString("password"), result.getString("profile_pic")?.base64Decode())
         else null
     }
     fun createToken(userId: Int): String {
@@ -318,7 +320,7 @@ class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
             }
             "setProfilePicture" -> {
                 val user = getUserFromToken() ?: return error("Bad token")
-                val pic = Base64.getDecoder().decode((query["base64"] as? String) ?: return error("Username not specified"))
+                val pic = ((query["base64"] as? String) ?: return error("Username not specified")).base64Decode()
                 if (pic.size > 1024 * 1024 * 10) return error("The picture is too big")
                 databaseConnection.setProfilePic(user.id, pic)
                 successResponse()
