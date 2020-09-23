@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="60.0" prefWidth="699.0" stylesheets="@../CSS/darkTheme.css" type="javafx.scene.layout.AnchorPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label fx:id="name" prefHeight="17.0" prefWidth="189.0" text="Группа 1" AnchorPane.leftAnchor="70.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="2.0">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <ImageView fx:id="avatar" fitHeight="60.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <image>
+            <Image url="@../icons/astronaut.png" />
+         </image>
+      </ImageView>
+      <Label fx:id="time" prefHeight="17.0" prefWidth="29.0" style="-fx-text-fill: silver;" text="13:12" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
+      <Label fx:id="lastMsg" prefHeight="17.0" prefWidth="223.0" style="-fx-text-fill: silver;" text="KARkarkakrkarkakrakrkarkakrkarkakrkarkakrkarkakrkarkakrkar" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="70.0" AnchorPane.rightAnchor="7.0" />
+   </children>
+</fx:root>

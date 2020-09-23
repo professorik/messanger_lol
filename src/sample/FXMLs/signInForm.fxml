@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="649.0" prefWidth="400.0" stylesheets="@../CSS/darkTheme.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.LoginController">
+   <children>
+      <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="449.0" AnchorPane.leftAnchor="125.0" AnchorPane.rightAnchor="125.0" AnchorPane.topAnchor="50.0">
+         <image>
+            <Image url="@../icons/launch.png" />
+         </image>
+      </ImageView>
+      <Label alignment="CENTER" contentDisplay="CENTER" layoutX="106.0" layoutY="248.0" text="Sign In" textAlignment="CENTER" AnchorPane.bottomAnchor="317.0" AnchorPane.leftAnchor="106.0" AnchorPane.rightAnchor="106.0" AnchorPane.topAnchor="248.0">
+         <font>
+            <Font name="System Bold" size="57.0" />
+         </font>
+      </Label>
+      <TextField fx:id="loginText" layoutX="66.0" layoutY="371.0" prefHeight="40.0" prefWidth="268.0" promptText="Nickname" AnchorPane.bottomAnchor="238.0" AnchorPane.leftAnchor="66.0" AnchorPane.rightAnchor="66.0" />
+      <TextField fx:id="passwordText" layoutX="66.0" layoutY="431.0" prefHeight="40.0" prefWidth="268.0" promptText="Password" AnchorPane.bottomAnchor="178.0" AnchorPane.leftAnchor="66.0" AnchorPane.rightAnchor="66.0" />
+      <Button fx:id="signInBtn" layoutX="100.0" layoutY="498.0" mnemonicParsing="false" text="Sign In" AnchorPane.bottomAnchor="118.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0">
+         <font>
+            <Font size="19.0" />
+         </font>
+      </Button>
+      <Button fx:id="goToRegBtn" layoutX="100.0" layoutY="548.0" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-text-fill: red;" text="I haven't an account yet..." textFill="RED" AnchorPane.bottomAnchor="90.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" />
+   </children>
+</AnchorPane>
