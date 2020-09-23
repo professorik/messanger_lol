@@ -319,6 +319,7 @@ class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
             "setProfilePicture" -> {
                 val user = getUserFromToken() ?: return error("Bad token")
                 val pic = Base64.getDecoder().decode((query["base64"] as? String) ?: return error("Username not specified"))
+                if (pic.size > 1024 * 1024 * 10) return error("The picture is too big")
                 databaseConnection.setProfilePic(user.id, pic)
                 successResponse()
             }
