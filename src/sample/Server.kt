@@ -9,7 +9,6 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.sql.Blob
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
@@ -67,7 +66,7 @@ class DatabaseConnection {
                         "username string NOT NULL,\n" +
                         "name string,\n" +
                         "password string,\n" +
-                        "profile_pic blob\n" +
+                        "profile_pic string\n" +
                         ");"
         )
         connection.createStatement().execute(
@@ -105,7 +104,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"), result.getBlob("profile_pic")?.binaryStream?.readAllBytes())
+                    result.getString("password"), Base64.getDecoder().decode(result.getString("profile_pic")))
         else null
     }
     private fun encodePassword(password: String) = MessageDigest.getInstance("SHA1").digest(password.toByteArray())
@@ -119,7 +118,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"), result.getBlob("profile_pic")?.binaryStream?.readAllBytes())
+                    result.getString("password"), Base64.getDecoder().decode(result.getString("profile_pic")))
         else null
     }
     fun getUser(id: Int): User? {
@@ -129,7 +128,7 @@ class DatabaseConnection {
         val result = statement.executeQuery()
         return if (result.next())
             User(result.getInt("id"), result.getString("username"), result.getString("name"),
-                    result.getString("password"), result.getBlob("profile_pic")?.binaryStream?.readAllBytes())
+                    result.getString("password"), Base64.getDecoder().decode(result.getString("profile_pic")))
         else null
     }
     fun createToken(userId: Int): String {
@@ -209,9 +208,7 @@ class DatabaseConnection {
     fun setProfilePic(id: Int, pic: ByteArray?) {
         val statement = connection
                 .prepareStatement("UPDATE users SET profile_pic = ? WHERE id = ?")
-        val blob = connection.createBlob()
-        if (pic != null) blob.setBytes(1, pic)
-        statement.setBlob(1, if (pic != null) blob else null)
+        statement.setString(1, if (pic != null) Base64.getEncoder().encodeToString(pic) else null)
         statement.setInt(2, id)
         statement.execute()
     }
