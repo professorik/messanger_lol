@@ -18,6 +18,7 @@ import kotlin.concurrent.thread
 import kotlin.math.floor
 
 fun String.base64Decode(): ByteArray = Base64.getDecoder().decode(this)
+fun ByteArray.base64Encode(): String = Base64.getEncoder().encodeToString(this)
 
 data class MutablePair<T, E>(var first: T, var second: E)
 
@@ -315,7 +316,7 @@ class AppServer(val socketPort: Int): EventEmitter<AppServerConnection>() {
                 val response = successResponse()
                 response["username"] = user.username
                 response["name"] = user.name
-                response["profilePicture"] = String(Base64.getEncoder().encode(user.profilePic))
+                response["profilePicture"] = user.profilePic?.base64Encode()
                 response
             }
             "setProfilePicture" -> {
