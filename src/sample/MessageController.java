@@ -44,21 +44,13 @@ public class MessageController extends AnchorPane{
         }
         this.messageTimestamp.setText(time);
         this.messageValue.setText(msgValue);
-        this.setPrefHeight(computeTextHeight(this.messageValue.getFont(), this.messageValue.getText(), this.messageValue.getPrefWidth())+20);
-    }
-
-    static double computeTextHeight(Font font, String text, double wrappingWidth) {
-        Text helper = new Text();
-        helper.setText(text);
-        helper.setFont(font);
-        helper.setWrappingWidth((int)wrappingWidth);
-        return helper.getLayoutBounds().getHeight();
+        this.setPrefHeight(Controller.computeTextHeight(this.messageValue.getFont(), this.messageValue.getText(), this.messageValue.getPrefWidth())+20);
     }
 
     public void setPrefSizeRoot(double w){
         this.messagesRoot.setPrefWidth(w);
         this.messageValue.setPrefWidth(w);
-        this.setPrefHeight(computeTextHeight(this.messageValue.getFont(), this.messageValue.getText(), w-45)*1.4+10);
+        this.setPrefHeight(Controller.computeTextHeight(this.messageValue.getFont(), this.messageValue.getText(), w-45)*1.4+10);
     }
 
 }

@@ -11,7 +11,10 @@ import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import kotlin.Unit;
 import org.json.simple.JSONObject;
 import sample.API.AppSocket;
@@ -42,6 +45,24 @@ public class Controller {
     @FXML
     private ScrollPane chatScrollPane;
 
+    @FXML
+    private TextArea sendMsgText;
+
+    @FXML
+    private Button sendBtn;
+
+    @FXML
+    private Label nicknameForChat;
+
+    @FXML
+    private Label userStatus;
+
+    @FXML
+    private AnchorPane messagesAnchor;
+
+    @FXML
+    private AnchorPane userDetailAnchor;
+
     private ArrayList<ChatViewItem> chatViewItems;
     private ArrayList<MessageController> messageItems;
 
@@ -51,10 +72,16 @@ public class Controller {
         messageItems = new ArrayList<>();
         //chatsVbox.setStyle("-fx-background-color: red");
         initChatsList(Main.mainToken);
-        controlDivider();
+        controlNodesHeight();
+        //TODO: in SceneBuilder set visibility
+        userDetailAnchor.setVisible(false);
+        messagesAnchor.setVisible(false);
     }
 
-    private void initMessages(String name) {
+    private void initChat(String name) {
+        userDetailAnchor.setVisible(true);
+        messagesAnchor.setVisible(true);
+        nicknameForChat.setText(name);
         messagesVbox.getChildren().clear();
         messageItems = new ArrayList<>();
         AppSocket socket = new AppSocket();
@@ -122,7 +149,7 @@ public class Controller {
                 String formattedDate = convertTimestamp(lastMessage.get("timestamp").toString());
                 chatViewItems.add(new ChatViewItem(chatName, lastMessage.get("value").toString(), formattedDate, response.get("profilePicture"), 1050 * splitPane.getDividerPositions()[0] - 10));
                 chatViewItems.get(chatViewItems.size()-1).setOnMouseClicked(mouseEvent -> {
-                    initMessages(chatName);
+                    initChat(chatName);
                 });
                 chatsVbox.getChildren().add(chatViewItems.get(chatViewItems.size() - 1));
             });
@@ -130,8 +157,9 @@ public class Controller {
         });
     }
 
-    private void controlDivider() {
+    private void controlNodesHeight() {
         splitPane.getDividers().get(0).positionProperty().addListener((observableValue, number, t1) -> {
+            this.sendMsgText.setPrefHeight(Math.min(200, 40 + computeTextHeight(sendMsgText.getFont(), sendMsgText.getText(), splitPane.getScene().getWidth() * (1 - splitPane.getDividerPositions()[0]) - 120)));
             for (int i = 0; i < chatViewItems.size(); i++) {
                 chatViewItems.get(i).setPrefWidth(splitPane.getScene().getWidth() * splitPane.getDividerPositions()[0] - 10);
             }
@@ -141,6 +169,9 @@ public class Controller {
                 System.out.println(messageItems.get(0).getPrefWidth());
             }
         });
+        sendMsgText.textProperty().addListener((observable, oldValue, newValue) -> {
+            this.sendMsgText.setPrefHeight(Math.min(200, 40 + computeTextHeight(sendMsgText.getFont(), sendMsgText.getText(), splitPane.getScene().getWidth() * (1 - splitPane.getDividerPositions()[0]) - 120)));
+        });
     }
 
     private String convertTimestamp(String timestampStr){
@@ -149,5 +180,13 @@ public class Controller {
         SimpleDateFormat sdf = new SimpleDateFormat("kk:mm");
         sdf.setTimeZone(Calendar.getInstance().getTimeZone());
         return sdf.format(date);
+    }
+
+    protected static double computeTextHeight(Font font, String text, double wrappingWidth) {
+        Text helper = new Text();
+        helper.setText(text);
+        helper.setFont(font);
+        helper.setWrappingWidth((int)wrappingWidth);
+        return helper.getLayoutBounds().getHeight();
     }
 }
